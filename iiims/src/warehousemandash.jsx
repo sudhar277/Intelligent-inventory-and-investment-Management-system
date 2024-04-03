@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import  { useState , useEffect } from 'react';
 import profilepic from "./default-profile-picture.jpg"
+import { getRecentProducts } from './Components/apiservice';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const DashboardPage = () => {
   const [inventoryData, setInventoryData] = useState([
@@ -10,6 +13,23 @@ const DashboardPage = () => {
   const [showInventoryPage, setShowInventoryPage] = useState(false); // New state for showing inventory
   const [errors, setErrors] = useState({});
   const [inventoryList, setInventoryList] = useState([]); // State to hold fetched inventory data
+  const [recentProducts, setRecentProducts] = useState([]);
+
+  //for view inventory
+  useEffect(() => {
+    const fetchRecentProducts = async () => {
+      try {
+        const products = await getRecentProducts();
+        setRecentProducts(products);
+      } catch (error) {
+        console.error('Failed to fetch recent products:', error);
+      }
+    };
+
+    fetchRecentProducts();
+  }, []);
+
+
 
   // Dummy product names
   const dummyProducts = ["Dummy Product 1", "Dummy Product 2", "Dummy Product 3"];
@@ -107,7 +127,7 @@ const DashboardPage = () => {
         </div>
       </nav>
       <section style={{ paddingTop: '50px', paddingRight: '200px', paddingLeft: '200px', flexGrow: 1 }}>
-        {showHistoryPage && (
+      {showHistoryPage && (
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#4285F4', marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>View History</h2>
             <select style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
@@ -144,33 +164,32 @@ const DashboardPage = () => {
           </div>
         )}
         {showInventoryPage && (
-          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ color: '#4285F4', marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>View Inventory</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th>Inventory ID</th>
-                  <th>Product ID</th>
-                  <th>Product Name</th>
-                  <th>Quantity</th>
-                  <th>Location</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Render inventory data here */}
-                {inventoryList.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.inventoryid}</td>
-                    <td>{item.productid}</td>
-                    <td>{item.productname}</td>
-                    <td>{item.quantity}</td>
-                    <td>{item.location}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+  <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+    <h2 style={{ color: '#4285F4', marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>View History</h2>
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr>
+          <th>Product ID</th>
+          <th>Product Name</th>
+          <th>Quantity</th>
+          <th>Inventory ID</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        {recentProducts.map((product, index) => (
+          <tr key={index}>
+            <td>{product.product_id}</td>
+            <td>{product.product_name}</td>
+            <td>{product.quantity}</td>
+            <td>{product.inventory_id}</td>
+            <td>{product.location}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
       </section>
     </div>
   );

@@ -6,6 +6,8 @@ import SignupPage from './signup';
 import ForgotPassword from './ForgotPasswordPage'; 
 import { loginUser } from './apiservice';
 import Welcome from './welcome'; // Import the Welcome component
+import  Warehousemandash from '../warehousemandash'; // Import the Welcome component
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,7 +20,7 @@ const LoginPage = () => {
       const response = await loginUser(email, password);
       alert('Login successful: ' + JSON.stringify(response));
       // Redirect to the welcome page after successful login using navigate function
-      navigate('/welcome');
+      navigate('/warehouseman');
     } catch (error) {
       alert('There was an error logging in: ' + error);
     }
@@ -66,7 +68,8 @@ const App = () => (
       <Route path="/" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/welcome" element={<Welcome />} /> {/* Add the new route for the welcome page */}
+      <Route path="/welcome" element={<Welcome />} /> Add the new route for the welcome page
+      <Route path="/warehouseman" element={<Warehousemandash />} />
     </Routes>
   </Router>
 );

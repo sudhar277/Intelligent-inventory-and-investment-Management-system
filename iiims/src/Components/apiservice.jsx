@@ -1,6 +1,6 @@
 export const registerUser = async (userData) => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/register', {
+    const response = await fetch('https://inventory-db-m6j0.onrender.com/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -22,7 +22,7 @@ export const registerUser = async (userData) => {
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/login', {
+    const response = await fetch('https://inventory-db-m6j0.onrender.com/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -40,3 +40,29 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+
+export const getRecentProducts = async () => {
+  try { 
+    const response = await fetch('https://inventory-db-m6j0.onrender.com/recent_products', {  
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Recent Products:', data); // Log the fetched data
+    return data;
+  } catch (error) {
+    console.error('There was an error fetching the recent products:', error);
+    throw error;
+  }
+};
+
+
+
+
