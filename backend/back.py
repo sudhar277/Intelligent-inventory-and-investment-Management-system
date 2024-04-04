@@ -93,10 +93,10 @@ async def login_user(user_data: UserLogin):
 
 
 # Twilio setup
-account_sid = "AC1b687701d93e25abe603b017945033f5"
-auth_token = "790c72c3342dd3920105c00a1f05b22b"
-verify_sid = "VA7830a33eafb91315e6561bd0a43c1ab1"
-client = Client(account_sid, auth_token)
+# account_sid = "AC1b687701d93e25abe603b017945033f5"
+# auth_token = "790c72c3342dd3920105c00a1f05b22b"
+# verify_sid = "VA7830a33eafb91315e6561bd0a43c1ab1"
+# client = Client(account_sid, auth_token)
 
 class PhoneNumberInput(BaseModel):
     phone_number: str
