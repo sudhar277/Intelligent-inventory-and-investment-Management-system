@@ -1,100 +1,57 @@
-
 import { Card, Form, Button, InputGroup } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { useCallback } from 'react';
+import { Link , useNavigate} from 'react-router-dom';
+import { useState } from 'react';
+import { sendOtp, verifyOtp, resetPassword } from './apiservice';
+
+
 
 const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const navigate = useNavigate(); 
 
-  // Simulate sending OTP API call (replace with actual implementation)
-  const sendOtp = async () => {
-    try {
-      const response = await fetch('/api/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
-        setIsOtpSent(true);
-        console.log('OTP sent successfully!');
-      } else {
-        console.error('Error sending OTP:', response.statusText);
-        alert('Error sending OTP. Please try again.'); // Handle errors gracefully
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      alert('An unexpected error occurred. Please try again.'); // Handle network or other errors
-    }
-  };
-
-  // Simulate verifying OTP API call (replace with actual implementation)
-  const verifyOtp = useCallback(async () => {
-    try {
-      const response = await fetch('/api/verify-otp', {
-        method: 'POST',
-        body: JSON.stringify({ email, otp }),
-      });
-  
-      if (response.ok) {
-        setIsOtpVerified(true);
-        console.log('OTP verified successfully!');
-      } else {
-        console.error('Error verifying OTP:', response.statusText);
-        alert('Invalid OTP. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      alert('An unexpected error occurred. Please try again.'); // Handle network or other errors
-    }
-  }, [email, otp, setIsOtpVerified]); // Include dependencies in the dependency array
-  
-  // Simulate resetting password API call (replace with actual implementation)
-  const resetPassword = async () => {
-    try {
-      const response = await fetch('/api/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ email, newPassword }),
-      });
-
-      if (response.ok) {
-        console.log('Password reset successfully!');
-        // Redirect to login page or show success message
-      } else {
-        console.error('Error resetting password:', response.statusText);
-        alert('Error resetting password. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      alert('An unexpected error occurred. Please try again.'); // Handle network or other errors
-    }
-  };
-
-  useEffect(() => {
-    if (isOtpSent && otp.length === 6) {
-      verifyOtp(); // Verify OTP automatically when entered
-    }
-  }, [isOtpSent, otp, verifyOtp]);
-  const handleSendOtp = (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    sendOtp();
+    const response = await sendOtp(phoneNumber);
+    if (response.status === 'success') {
+      setIsOtpSent(true);
+      console.log('OTP sent successfully!');
+    } else {
+      console.error('Error sending OTP:', response.detail);
+      alert('Error sending OTP. Please try again.');
+    }
   };
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    verifyOtp();
+    const response = await verifyOtp(phoneNumber, otp);
+    if (response.status === 'success') {
+      setIsOtpVerified(true);
+      console.log('OTP verified successfully!');
+    } else {
+      console.error('Error verifying OTP:', response.detail);
+      alert('Invalid OTP. Please try again.');
+    }
   };
 
-  const handleResetPassword = (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
-    resetPassword();
+    const response = await resetPassword(phoneNumber, newPassword);
+    if (response.status === 'success') {
+      console.log('Password reset successfully!');
+      alert('Password reset successfully!');
+      navigate('/');
+
+    } else {
+      console.error('Error resetting password:', response.detail);
+      alert('Error resetting password. Please try again.');
+    }
   };
 
-  return (
+return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#4504f6', backgroundImage: 'linear-gradient(to right, #a8c0ff, #3f2b96)' }}>
       <Card style={{
         width: '350px', // Adjust card width as needed
@@ -107,16 +64,17 @@ const ForgotPasswordPage = () => {
         <Card.Body>
           <h2>Forgot Password</h2>
 <p>Enter your email address to reset your password.</p>
+
 {!isOtpSent && !isOtpVerified && (
   <Form onSubmit={handleSendOtp}>
-    <Form.Group controlId="formBasicEmail">
-      <Form.Label>Email address</Form.Label>
+    <Form.Group controlId="formBasicPhoneNumber">
+      <Form.Label>Phone Number</Form.Label>
       <InputGroup>
         <Form.Control
-          type="email"
-          placeholder="Enter email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="tel"
+          placeholder="Enter phone number"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
           required
         />
       </InputGroup>
@@ -126,6 +84,7 @@ const ForgotPasswordPage = () => {
     </Button>
   </Form>
 )}
+
 
 {isOtpSent && !isOtpVerified && (
   <Form onSubmit={handleVerifyOtp}>
@@ -169,7 +128,7 @@ const ForgotPasswordPage = () => {
 )}
 
 <div className="mt-3">
-  <Link to="/login">Remembered your password? Log in</Link>
+  <Link to="/">Remembered your password? Log in</Link>
 </div>
 </Card.Body>
 </Card>
@@ -177,4 +136,5 @@ const ForgotPasswordPage = () => {
 );
 };
 
-export default ForgotPasswordPage;
+
+export default  ForgotPasswordPage;

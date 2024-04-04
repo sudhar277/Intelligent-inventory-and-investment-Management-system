@@ -63,6 +63,32 @@ export const getRecentProducts = async () => {
   }
 };
 
+export const sendOtp = async (phoneNumber) => {
+  const response = await fetch('http://127.0.0.1:8000/send_otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phoneNumber }),
+  });
+  return response.json();
+};
+
+export const verifyOtp = async (phoneNumber, otp) => {
+  const response = await fetch('http://127.0.0.1:8000/verify_otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phoneNumber, otp_code: otp }),
+  });
+  return response.json();
+};
+
+export const resetPassword = async (phoneNumber, newPassword) => {
+  const response = await fetch('http://127.0.0.1:8000/reset_password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_number: phoneNumber, new_password: newPassword }),
+  });
+  return response.json();
+};
 
 
 

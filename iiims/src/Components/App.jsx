@@ -18,13 +18,17 @@ const LoginPage = () => {
   
     try {
       const response = await loginUser(email, password);
-      alert('Login successful: ' + JSON.stringify(response));
-      // Redirect to the welcome page after successful login using navigate function
-      navigate('/warehouseman');
+      if (response.status === 'success') {
+        // Redirect to the welcome page after successful login using navigate function
+        navigate('/warehouseman');
+      } else {
+        alert('Login failed: ' + JSON.stringify(response));
+      }
     } catch (error) {
       alert('There was an error logging in: ' + error);
     }
   };
+  
   
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -68,7 +72,7 @@ const App = () => (
       <Route path="/" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/welcome" element={<Welcome />} /> Add the new route for the welcome page
+      <Route path="/welcome" element={<Welcome />} /> 
       <Route path="/warehouseman" element={<Warehousemandash />} />
     </Routes>
   </Router>
