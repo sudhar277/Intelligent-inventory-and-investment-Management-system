@@ -6,7 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const DashboardPage = () => {
   const [inventoryData, setInventoryData] = useState([
-    { inventoryid: '', productname: '', addProduct: '', removeProduct: '', location: '' }
+    { inventory_id: '', product_id: '', import_: '', export: '', location: '' }
   ]);
   const [showUpdatePage, setShowUpdatePage] = useState(true);
   const [showHistoryPage, setShowHistoryPage] = useState(false);
@@ -27,15 +27,39 @@ const DashboardPage = () => {
     };
 
     fetchRecentProducts();
+  }, [showInventoryPage]);
+
+  const [products, setProducts] = useState([]);
+
+  const getproducts = async () => {
+    const response = await fetch('https://inventory-db-m6j0.onrender.com/products', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Products:', data); // Log the fetched data
+    setProducts(data);
+    console.log('Products:', products); // Log the fetched data
+  };
+
+  useEffect(() => {
+    getproducts();
   }, []);
 
 
 
   // Dummy product names
-  const dummyProducts = ["Dummy Product 1", "Dummy Product 2", "Dummy Product 3"];
+  // const dummyProducts = ["Dummy Product 1", "Dummy Product 2", "Dummy Product 3"];
 
   const handleAddRow = () => {
-    setInventoryData([...inventoryData, { inventoryid: '', productname: '', addProduct: '', removeProduct: '', location: '' }]);
+    setInventoryData(prevData => [...prevData, { inventory_id: '', product_id: '', import_: '', export: '', location: '' }]);
   };
 
   const handleRemoveRow = (indexToRemove) => {
@@ -45,35 +69,73 @@ const DashboardPage = () => {
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
     const newData = [...inventoryData];
-    newData[index][name] = value;
+    switch (name) {
+      case "inventoryid":
+        newData[index]["inventory_id"] = value;
+        break;
+      case "productname":
+        newData[index]["product_id"] = value;
+        break;
+      case "addProduct":
+        newData[index]["import_"] = value;
+        break;
+      case "removeProduct":
+        newData[index]["export"] = value;
+        break;
+      case "location":
+        newData[index]["location"] = value;
+        break;
+      default:
+        break;
+    }
     setInventoryData(newData);
+    //console.log(inventoryData);
   };
 
-  const handleSubmit = (e) => {
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     let errors = {};
     let isValid = true;
     inventoryData.forEach((data, index) => {
-      if (!data.inventoryid || !data.productname || (data.addProduct === '' && data.removeProduct === '') || !data.location) {
+      if (!data.inventory_id || !data.product_id || (data.import_ === '' && data.export === '') || !data.location) {
         errors[index] = 'At least one of "Add Quantity" or "Remove Quantity" is required';
         isValid = false;
       }
     });
-
+  
     if (!isValid) {
       setErrors(errors);
       return;
     }
-
-    // Implement submit functionality here
-    console.log('Inventory Data:', inventoryData);
-    // Clear errors if the form is successfully submitted
-    setErrors({});
-
-    // Reset form fields
-    setInventoryData([
-      { inventoryid: '', productname: '', addProduct: '', removeProduct: '', location: '' }
-    ]);
+  
+    // Send data to the API
+    try {
+      const response = await fetch('https://inventory-db-m6j0.onrender.com/inventory_product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(inventoryData)
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      alert(JSON.stringify(data)); 
+  
+      // Clear errors if the form is successfully submitted
+      setErrors({});
+  
+      // Reset form fields
+      setInventoryData([
+        { inventory_id: '', product_id: '', import_: '', export: '', location: '' }
+      ]);
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleShowUpdatePage = () => {
@@ -103,6 +165,37 @@ const DashboardPage = () => {
     window.location.reload();
   };
 
+  const [producthistory, setProductHistory] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState('');
+
+  const getproducthistory = async (product_id) => {
+    const response = await fetch('https://inventory-db-m6j0.onrender.com/view_history', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ product_id: Number(product_id) })
+    });
+  
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+      return 1;
+    }
+  
+    const data = await response.json();
+    setProductHistory(data);
+    console.log(producthistory);
+    setSelectedProduct(product_id);
+    return 1;
+    
+  }
+  useEffect(() => {
+    if (showHistoryPage) {
+      getproducthistory("0");
+    }
+  }, [showHistoryPage]);
+
+
   return (
     <div style={{ backgroundColor: '#f5f5f5', minHeight: '100vh', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <header style={{ backgroundColor: '#4285F4', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
@@ -127,14 +220,45 @@ const DashboardPage = () => {
         </div>
       </nav>
       <section style={{ paddingTop: '50px', paddingRight: '200px', paddingLeft: '200px', flexGrow: 1 }}>
-      {showHistoryPage && (
+      {showHistoryPage &&  (
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#4285F4', marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>View History</h2>
-            <select style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
-              <option>Dummy Product 1</option>
-              <option>Dummy Product 2</option>
-              <option>Dummy Product 3</option>
-            </select>
+            <select 
+                name="productname" 
+                onChange={(e) => getproducthistory(e.target.value || "0")} 
+                style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+              >
+                <option value="">Select Product</option>
+                {Object.entries(products).map(([id, name], i) => (
+                  <option key={i} value={id}>{name}</option>
+                ))}
+              </select>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr>
+          <th>Product ID</th>
+          <th>Date of transaction </th>
+          <th>Import</th>
+          <th>Export</th>
+          <th>Total_Quantity</th>
+          <th>Inventory ID</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        {producthistory.map((product, index) => (
+          <tr key={index}>
+            <td>{product.product_id}</td>
+            <td>{product.datetime}</td>
+            <td>{product.import}</td>
+            <td>{product.export}</td>
+            <td>{product.total_quantity}</td>
+            <td>{product.inventory_id}</td>
+            <td>{product.location}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
           </div>
         )}
         {showUpdatePage && (
@@ -143,16 +267,16 @@ const DashboardPage = () => {
             <form onSubmit={handleSubmit}>
               {inventoryData.map((data, index) => (
                 <div key={index} style={{ marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>
-                  <input type="number" name="inventoryid" placeholder="Inventory ID" min="0" value={data.inventoryid} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                  <input type="number" name="inventoryid" placeholder="Inventory ID" min="0" value={data.inventory_id} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                   {/* Dropdown for product name */}
-                  <select name="productname" value={data.productname} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
+                  <select name="productname" value={data.product_id} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
                     <option value="">Select Product</option>
-                    {dummyProducts.map((product, i) => (
-                      <option key={i} value={product}>{product}</option>
+                    {Object.entries(products).map(([id, name], i) => (
+                      <option key={i} value={id}>{name}</option>
                     ))}
                   </select>
-                  <input type="number" name="addProduct" placeholder="Add Quantity" min="0" value={data.addProduct} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
-                  <input type="number" name="removeProduct" placeholder="Remove Quantity" min="0" value={data.removeProduct} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                  <input type="number" name="addProduct" placeholder="Add Quantity" min="0" value={data.import_} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                  <input type="number" name="removeProduct" placeholder="Remove Quantity" min="0" value={data.export} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                   <input type="text" name="location" placeholder="Location" value={data.location} onChange={(e) => handleInputChange(index, e)} style={{ marginRight: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
                   {index !== 0 && <button type="button" onClick={() => handleRemoveRow(index)} style={{ backgroundColor: '#DB4437', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', marginLeft: '10px' }}>-</button>}
                   {errors[index] && <div style={{ color: '#DB4437', marginTop: '5px' }}>{errors[index]}</div>}
@@ -165,7 +289,7 @@ const DashboardPage = () => {
         )}
         {showInventoryPage && (
   <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-    <h2 style={{ color: '#4285F4', marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>View History</h2>
+    <h2 style={{ color: '#4285F4', marginBottom: '20px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>View Inventory</h2>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
