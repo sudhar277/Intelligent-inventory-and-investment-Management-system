@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 import os
 from twilio.rest import Client
-
+from typing import List
 
 logger = logging.getLogger("uvicorn")
 app = FastAPI()
@@ -159,3 +159,58 @@ async def reset_password(data: ResetPasswordInput):
     conn.commit()
 
     return {"status": "success"}
+
+
+
+class ReorderPoint(BaseModel):
+    product_name: str
+    reorder_point: int
+
+@app.post("/reorder-points")
+async def set_reorder_points(reorder_points: List[ReorderPoint]):
+    conn = None
+    non_existent_products = []
+
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+
+        for data in reorder_points:
+            # Check if the product exists
+            cur.execute(
+                """
+                SELECT "ProductID" FROM "Product" WHERE "Product_Name" = %s
+                """,
+                (data.product_name,)
+            )
+            result = cur.fetchone()
+
+            if result is None:
+                non_existent_products.append(data.product_name)
+                continue
+
+            # If the product exists, update the reorder point
+            cur.execute(
+                """
+                UPDATE "Product"
+                SET "reorder_points" = %s
+                WHERE "ProductID" = %s
+                """,
+                (data.reorder_point, result[0])
+            )
+
+        conn.commit()
+
+        if non_existent_products:
+            return {"status": "error", "detail": f"These products do not exist: {non_existent_products}"}
+
+        return {"status": "success"}
+
+    except (Exception, psycopg2.Error) as error:
+        print(f"Error setting reorder points: {error}")
+        return {"status": "error", "detail": str(error)}
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
