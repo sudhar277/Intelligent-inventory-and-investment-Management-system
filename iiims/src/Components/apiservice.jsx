@@ -63,29 +63,29 @@ export const getRecentProducts = async () => {
   }
 };
 
-export const sendOtp = async (phoneNumber) => {
+export const sendOtp = async (email) => {
   const response = await fetch('http://127.0.0.1:8000/send_otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone_number: phoneNumber }),
+    body: JSON.stringify({ email: email }),
   });
   return response.json();
 };
 
-export const verifyOtp = async (phoneNumber, otp) => {
+export const verifyOtp = async (email, otp) => {
   const response = await fetch('http://127.0.0.1:8000/verify_otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone_number: phoneNumber, otp_code: otp }),
+    body: JSON.stringify({ email: email, otp_code: otp }),
   });
   return response.json();
 };
 
-export const resetPassword = async (phoneNumber, newPassword) => {
+export const resetPassword = async (email, newPassword) => {
   const response = await fetch('http://127.0.0.1:8000/reset_password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone_number: phoneNumber, new_password: newPassword }),
+    body: JSON.stringify({ email: email, new_password: newPassword }),
   });
   return response.json();
 };
@@ -114,3 +114,25 @@ export const setReorderPoints = async (reorderPoints) => {
     throw error;
   }
 };
+
+export const getUserRole = async (email) => {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/get_role', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('There was an error fetching the user role:', error);
+    throw error;
+  }
+};
+

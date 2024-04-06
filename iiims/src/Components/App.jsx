@@ -1,17 +1,24 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { BrowserRouter as Router, Route, Routes, Link ,useNavigate } from 'react-router-dom'; // Import useNavigate
 import loginImage from '../login_pic.png';
 import { Card, Form, Button } from 'react-bootstrap';
 import SignupPage from './signup';
 import ForgotPassword from './ForgotPasswordPage'; 
-import { loginUser } from './apiservice';
+import { loginUser ,getUserRole } from './apiservice';
 import Welcome from './welcome'; // Import the Welcome component
 import  Warehousemandash from '../warehousemandash'; // Import the Welcome component
+import Productionmanager from './productionmanager'; // Import the Welcome component
+
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+
+
+
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,8 +26,12 @@ const LoginPage = () => {
     try {
       const response = await loginUser(email, password);
       if (response.status === 'success') {
-        // Redirect to the welcome page after successful login using navigate function
+        const roleResponse = await getUserRole(email); 
+      if (roleResponse.role === 'warehouse_manager') {
         navigate('/warehouseman');
+      } else if (roleResponse.role === 'production_manager') {
+        navigate('/productionmanager');
+      }
       } else {
         alert('Login failed: ' + JSON.stringify(response));
       }
@@ -66,16 +77,21 @@ const LoginPage = () => {
   );
 };
 
-const App = () => (
-  <Router>
+const App = () => {
+
+  return (
+    <Router>
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/welcome" element={<Welcome />} /> 
       <Route path="/warehouseman" element={<Warehousemandash />} />
+      <Route path="/productionmanager" element={<Productionmanager />} />
     </Routes>
   </Router>
-);
+  );
+};
 
 export default App;
+

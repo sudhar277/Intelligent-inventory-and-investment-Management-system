@@ -3,10 +3,8 @@ import { Link , useNavigate} from 'react-router-dom';
 import { useState } from 'react';
 import { sendOtp, verifyOtp, resetPassword } from './apiservice';
 
-
-
 const ForgotPasswordPage = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -15,7 +13,7 @@ const ForgotPasswordPage = () => {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    const response = await sendOtp(phoneNumber);
+    const response = await sendOtp(email);
     if (response.status === 'success') {
       setIsOtpSent(true);
       console.log('OTP sent successfully!');
@@ -27,7 +25,7 @@ const ForgotPasswordPage = () => {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    const response = await verifyOtp(phoneNumber, otp);
+    const response = await verifyOtp(email, otp);
     if (response.status === 'success') {
       setIsOtpVerified(true);
       console.log('OTP verified successfully!');
@@ -39,12 +37,11 @@ const ForgotPasswordPage = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    const response = await resetPassword(phoneNumber, newPassword);
+    const response = await resetPassword(email, newPassword);
     if (response.status === 'success') {
       console.log('Password reset successfully!');
       alert('Password reset successfully!');
       navigate('/');
-
     } else {
       console.error('Error resetting password:', response.detail);
       alert('Error resetting password. Please try again.');
@@ -63,18 +60,19 @@ return (
       }}>
         <Card.Body>
           <h2>Forgot Password</h2>
+<div>
 <p>Enter your email address to reset your password.</p>
-
+</div>
 {!isOtpSent && !isOtpVerified && (
   <Form onSubmit={handleSendOtp}>
-    <Form.Group controlId="formBasicPhoneNumber">
-      <Form.Label>Phone Number</Form.Label>
+    <Form.Group controlId="formBasicEmail">
+      <Form.Label>Email</Form.Label>
       <InputGroup>
         <Form.Control
-          type="tel"
-          placeholder="Enter phone number"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
+          type="email"
+          placeholder="Enter email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
       </InputGroup>
@@ -84,6 +82,7 @@ return (
     </Button>
   </Form>
 )}
+
 
 
 {isOtpSent && !isOtpVerified && (

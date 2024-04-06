@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException,BackgroundTasks
 from pydantic import BaseModel
 import psycopg2
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +11,11 @@ from email.mime.text import MIMEText
 import os
 from twilio.rest import Client
 from typing import List
+from dotenv import load_dotenv
+import smtplib
+load_dotenv('.env')
+
+
 
 logger = logging.getLogger("uvicorn")
 app = FastAPI()
@@ -92,56 +97,87 @@ async def login_user(user_data: UserLogin):
             conn.close()
 
 
-# Twilio setup
-account_sid = "AC1b687701d93e25abe603b017945033f5"
-auth_token = "790c72c3342dd3920105c00a1f05b22b"
-verify_sid = "VA7830a33eafb91315e6561bd0a43c1ab1"
-client = Client(account_sid, auth_token)
 
-class PhoneNumberInput(BaseModel):
-    phone_number: str
+
+class EmailInput(BaseModel):
+    email: str
+
+def generate_otp():
+    return "".join(random.choices(string.digits, k=6))
 
 @app.post("/send_otp")
-async def send_otp(data: PhoneNumberInput):
+async def send_otp(data: EmailInput):
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
 
     # Check if the user is registered
     cur.execute(
         """
-        SELECT "Contact_Info" FROM "User" WHERE "Contact_Info" = %s
+        SELECT "Email" FROM "User" WHERE "Email" = %s
         """,
-        (data.phone_number,)
+        (data.email,)
     )
     result = cur.fetchone()
     if result is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Send the OTP
-    verification = client.verify.v2.services(verify_sid) \
-        .verifications \
-        .create(to=data.phone_number, channel="sms")
+    # Generate the OTP
+    otp = generate_otp()
+
+    # Send the OTP via email
+    subject = "Password Reset OTP"
+    message = f"Your OTP for resetting your password is {otp}."
+    from_addr = Envs.MAIL_FROM
+    password = Envs.MAIL_PASSWORD
+    to_addr = data.email
+
+    send_email(subject, message, from_addr, to_addr, password)
+
+
+    # Calculate the expiry time
+    expiry = datetime.now() + timedelta(minutes=5)
+
+    # Store the OTP in the database
+    cur.execute(
+        """
+        INSERT INTO "Otp" ("Email", "otp", "Expiration_Time") VALUES (%s, %s, %s)
+        ON CONFLICT ("Email") DO UPDATE SET "otp" = %s, "Expiration_Time" = %s
+        """,
+        (to_addr, otp, expiry, otp, expiry)
+    )
+    conn.commit()
 
     return {"status": "success"}
 
+
 class OtpInput(BaseModel):
-    phone_number: str
+    email: str
     otp_code: str
+
 
 @app.post("/verify_otp")
 async def verify_otp(data: OtpInput):
-    # Verify the OTP
-    verification_check = client.verify.v2.services(verify_sid) \
-        .verification_checks \
-        .create(to=data.phone_number, code=data.otp_code)
-    if verification_check.status != "approved":
-        raise HTTPException(status_code=400, detail="Invalid OTP")
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+
+    # Check the OTP
+    cur.execute(
+        """
+        SELECT "otp" FROM "Otp" WHERE "Email" = %s AND "Expiration_Time" > NOW()
+        """,
+        (data.email,)
+    )
+    result = cur.fetchone()
+    if result is None or result[0] != data.otp_code:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
 
     return {"status": "success"}
 
+
 class ResetPasswordInput(BaseModel):
-    phone_number: str
+    email: str
     new_password: str
+
 
 @app.post("/reset_password")
 async def reset_password(data: ResetPasswordInput):
@@ -152,13 +188,14 @@ async def reset_password(data: ResetPasswordInput):
     hashed_password = bcrypt.hash(data.new_password)
     cur.execute(
         """
-        UPDATE "User" SET "Password_Hash" = %s WHERE "Contact_Info" = %s
+        UPDATE "User" SET "Password_Hash" = %s WHERE "Email" = %s
         """,
-        (hashed_password, data.phone_number)
+        (hashed_password, data.email)
     )
     conn.commit()
 
     return {"status": "success"}
+
 
 
 
@@ -214,3 +251,61 @@ async def set_reorder_points(reorder_points: List[ReorderPoint]):
         if conn:
             cur.close()
             conn.close()
+
+
+
+class Envs:
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_FROM = os.getenv('MAIL_FROM')
+
+def send_email(subject, message, from_addr, to_addr, password):
+    msg = MIMEText(message)
+    msg['Subject'] = subject
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(from_addr, password)
+    server.send_message(msg)
+    server.quit()
+
+
+
+class Emailinput(BaseModel):
+    email: str
+
+
+@app.post("/get_role")
+async def get_role(data: Emailinput):
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+
+    # Get the RoleID from the User table
+    cur.execute(
+        """
+        SELECT "RoleID" FROM "User" WHERE "Email" = %s
+        """,
+        (data.email,)
+    )
+    result = cur.fetchone()
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    role_id = result[0]
+
+    # Get the Role_Name from the Role table
+    cur.execute(
+        """
+        SELECT "Role_Name" FROM "Role" WHERE "RoleID" = %s
+        """,
+        (role_id,)
+    )
+    result = cur.fetchone()
+    if result is None:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    role_name = result[0]
+
+    return {"role": role_name}
