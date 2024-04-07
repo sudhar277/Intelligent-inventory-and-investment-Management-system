@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import profilepic from "./default-profile-picture.jpg"
 import { getRecentProducts } from './Components/apiservice';
 import 'bootstrap/dist/css/bootstrap.min.css';
