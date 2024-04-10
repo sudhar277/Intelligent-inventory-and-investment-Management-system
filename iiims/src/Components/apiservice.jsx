@@ -136,3 +136,25 @@ export const getUserRole = async (email) => {
   }
 };
 
+
+export const getProductLocations = async () => {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/product-locations', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+ 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+ 
+    const data = await response.json();
+    console.log('Product Locations:', data); // Log the fetched data
+    return data;
+  } catch (error) {
+    console.error('There was an error fetching the product locations:', error);
+    throw error;
+  }
+};

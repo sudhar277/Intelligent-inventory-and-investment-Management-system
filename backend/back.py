@@ -309,3 +309,46 @@ async def get_role(data: Emailinput):
     role_name = result[0]
 
     return {"role": role_name}
+
+class ProductLocation(BaseModel):
+    inventoryNo: int
+    productID: int
+    productName: str
+    location: str
+ 
+# Modify the route for fetching product locations to match the frontend endpoint
+@app.get("/product-locations", response_model=List[ProductLocation])
+async def get_product_locations():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+ 
+    try:
+        cur.execute(
+            """
+            SELECT ip."InventoryID", ip."product_id", p."Product_Name", ip."location"
+            FROM "inventory_product" ip
+            INNER JOIN "Product" p ON p."ProductID" = ip."product_id";
+            """
+        )
+        rows = cur.fetchall()
+ 
+        product_locations = []
+        for row in rows:
+            product_location = ProductLocation(
+                inventoryNo=row[0],
+                productID=row[1],
+                productName=row[2],
+                location=row[3]
+            )
+            product_locations.append(product_location)
+ 
+        return product_locations
+ 
+    except (Exception, psycopg2.Error) as error:
+        print(f"Error fetching product locations: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+ 
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
