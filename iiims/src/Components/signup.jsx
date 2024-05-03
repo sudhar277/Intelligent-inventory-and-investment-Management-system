@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.css';
 import signupimage from '../Signuphalf.png';
 import { registerUser } from './apiservice'; // Import the registerUser function
 
 const SignupPage = () => {
   // State to store form data
+
+  const navigate = useNavigate(); 
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -46,6 +49,7 @@ const SignupPage = () => {
       if (response) {
         console.log(response);
         alert('Registration successful!');
+        navigate('/');
       } else {
         alert('Registration failed.');
       }
@@ -89,6 +93,7 @@ const SignupPage = () => {
                   <Form.Control
                     type="text"
                     placeholder="Enter your full name"
+                    required
                     value={formData.fullName}
                     onChange={handleInputChange}
                   />
@@ -100,7 +105,10 @@ const SignupPage = () => {
                     type="email"
                     placeholder="Enter your email"
                     value={formData.email}
+                    required
                     onChange={handleInputChange}
+                    pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+
                   />
                 </Form.Group>
 
@@ -109,8 +117,11 @@ const SignupPage = () => {
                   <Form.Control
                     type="password"
                     placeholder="Enter your password"
+                    required
                     value={formData.password}
                     onChange={handleInputChange}
+                    minLength="8"
+
                   />
                 </Form.Group>
 
@@ -120,7 +131,10 @@ const SignupPage = () => {
                     type="password"
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
+                    required
                     onChange={handleInputChange}
+                    minLength="8"
+
                   />
                 </Form.Group>
 
@@ -130,7 +144,10 @@ const SignupPage = () => {
                     type="tel"
                     placeholder="Enter your phone number"
                     value={formData.phoneNumber}
+                    required
                     onChange={handleInputChange}
+                    pattern="\d{10}"
+
                   />
                 </Form.Group>
 

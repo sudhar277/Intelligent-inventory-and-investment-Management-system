@@ -8,6 +8,7 @@ import { loginUser ,getUserRole } from './apiservice';
 import Welcome from './welcome'; // Import the Welcome component
 import  Warehousemandash from '../warehousemandash'; // Import the Welcome component
 import Productionmanager from './productionmanager'; // Import the Welcome component
+import Logisticmanager from '../logisiticsman';
 
 
 
@@ -32,6 +33,9 @@ const LoginPage = () => {
       } else if (roleResponse.role === 'production_manager') {
         navigate('/productionmanager');
       }
+      else if (roleResponse.role === 'logistic_manager') {
+        navigate('/logisiticsman');
+      }
       } else {
         alert('Login failed: ' + JSON.stringify(response));
       }
@@ -54,11 +58,11 @@ const LoginPage = () => {
             <Form onSubmit={handleLogin}>
               <Form.Group controlId="formBasicEmail">
                 <Form.Label>Email address</Form.Label>
-                <Form.Control type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Form.Control type="email" placeholder="Enter email" required value={email}     pattern="[^\s@]+@[^\s@]+\.[^\s@]+" onChange={(e) => setEmail(e.target.value)} />
               </Form.Group>
               <Form.Group controlId="formBasicPassword">
                 <Form.Label>Password</Form.Label>
-                <Form.Control type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Form.Control type="password" placeholder="Password" required value={password}  minLength={8} onChange={(e) => setPassword(e.target.value)} />
               </Form.Group>
               <Link to="/forgot-password" style={{ marginTop: '10px', display: 'block', textDecoration: 'none' }}>
                 Forgot your password?
@@ -88,6 +92,7 @@ const App = () => {
       <Route path="/welcome" element={<Welcome />} /> 
       <Route path="/warehouseman" element={<Warehousemandash />} />
       <Route path="/productionmanager" element={<Productionmanager />} />
+      <Route path="/logisiticsman" element={<Logisticmanager/>}/>
     </Routes>
   </Router>
   );

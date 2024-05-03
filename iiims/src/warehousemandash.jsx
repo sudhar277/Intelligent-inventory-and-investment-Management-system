@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import profilepic from "./default-profile-picture.jpg"
 import { getRecentProducts } from './Components/apiservice';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -29,7 +29,7 @@ const DashboardPage = () => {
 
   // Fetching products
   const getProducts = async () => {
-    const response = await fetch('https://inventory-db-m6j0.onrender.com/products', {
+    const response = await fetch('http://127.0.0.1:8000/products', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -103,7 +103,7 @@ const DashboardPage = () => {
 
     // Send data to the API
     try {
-      const response = await fetch('https://inventory-db-m6j0.onrender.com/inventory_product', {
+      const response = await fetch('http://127.0.0.1:8000/inventory_product', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -159,7 +159,7 @@ const DashboardPage = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
 
   const getProductHistory = async (product_id) => {
-    const response = await fetch('https://inventory-db-m6j0.onrender.com/view_history', {
+    const response = await fetch('http://127.0.0.1:8000/view_history', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

@@ -1,6 +1,6 @@
 export const registerUser = async (userData) => {
   try {
-    const response = await fetch('https://inventory-db-m6j0.onrender.com/register', {
+    const response = await fetch('http://127.0.0.1:8000/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -22,7 +22,7 @@ export const registerUser = async (userData) => {
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await fetch('https://inventory-db-m6j0.onrender.com/login', {
+    const response = await fetch('http://127.0.0.1:8000/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -43,7 +43,7 @@ export const loginUser = async (email, password) => {
 
 export const getRecentProducts = async () => {
   try { 
-    const response = await fetch('https://inventory-db-m6j0.onrender.com/recent_products', {  
+    const response = await fetch('http://127.0.0.1:8000/recent_products', {  
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -90,7 +90,28 @@ export const resetPassword = async (email, newPassword) => {
   return response.json();
 };
 
+// Update the getProductLocations function to use the correct endpoint
+export const getProductLocations = async () => {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/product-locations', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Product Locations:', data); // Log the fetched data
+    return data;
+  } catch (error) {
+    console.error('There was an error fetching the product locations:', error);
+    throw error;
+  }
+};
 
 
 export const setReorderPoints = async (reorderPoints) => {
@@ -132,29 +153,6 @@ export const getUserRole = async (email) => {
     return await response.json();
   } catch (error) {
     console.error('There was an error fetching the user role:', error);
-    throw error;
-  }
-};
-
-
-export const getProductLocations = async () => {
-  try {
-    const response = await fetch('http://127.0.0.1:8000/product-locations', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
- 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
- 
-    const data = await response.json();
-    console.log('Product Locations:', data); // Log the fetched data
-    return data;
-  } catch (error) {
-    console.error('There was an error fetching the product locations:', error);
     throw error;
   }
 };

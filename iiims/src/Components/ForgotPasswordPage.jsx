@@ -117,6 +117,7 @@ return (
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
+          minLength={8}
         />
       </InputGroup>
     </Form.Group>
