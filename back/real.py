@@ -20,10 +20,12 @@ from dotenv import load_dotenv
 import smtplib
 load_dotenv('.env')
 
+
+# Logging configuration
 logger = logging.getLogger("uvicorn")
 
-
-DATABASE_URL = "dbname=inventory_wxrq user=inventory_wxrq_user password=32T4vxi3Pe4E703IDoJFRLjLDPnVjaQ6 host=dpg-co2n9f021fec73b0s4g0-a.oregon-postgres.render.com port=5432"
+# Database configuration
+DATABASE_URL = "dbname=postgres user=postgres password=shripraveen host=34.46.30.132 port=5432"
 
 app = FastAPI()
 
@@ -97,13 +99,16 @@ async def update_inventory_product(inventory_products: List[InventoryProduct]):
     try:
         with conn.cursor() as cur:
             for inventory_product in inventory_products:
+                # Calculate the total quantity based on import and export
+                total_quantity = inventory_product.import_ - inventory_product.export
+
                 # Check if the product_id and inventory_id exist in the inventory_product table
                 cur.execute(
-                    """SELECT * FROM "inventory_product" WHERE "product_id" = %s AND "InventoryID" = %s""",
+                    """SELECT quantity FROM "inventory_product" WHERE "product_id" = %s AND "InventoryID" = %s""",
                     (inventory_product.product_id, inventory_product.inventory_id)
                 )
                 row = cur.fetchone()
-                total_quantity = inventory_product.import_ - inventory_product.export
+
                 if row:
                     # If the record exists, update the quantity
                     cur.execute(
@@ -118,19 +123,22 @@ async def update_inventory_product(inventory_products: List[InventoryProduct]):
                         (inventory_product.product_id, inventory_product.inventory_id, total_quantity, inventory_product.location)
                     )
                     total_quantity = cur.fetchone()[0]
+
                 # Insert a new record into inventory_product_history
                 cur.execute(
-                    """INSERT INTO "inventory_product_history" ("product_id", "inventory_id", "datetime", "import", "export", "total_quantity", "location") VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                    (inventory_product.product_id, inventory_product.inventory_id, datetime.now(), inventory_product.import_, inventory_product.export, total_quantity, inventory_product.location)
+                    """INSERT INTO "inventory_product_history" ("product_id", "inventory_id", "import", "export", "total_quantity", "location") VALUES (%s, %s, %s, %s, %s, %s)""",
+                    (inventory_product.product_id, inventory_product.inventory_id, inventory_product.import_, inventory_product.export, total_quantity, inventory_product.location)
                 )
+
             conn.commit()
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
     finally:
         conn.close()
 
     return {"message": "Inventory updated successfully"}
-
     
 @app.get("/recent_products")
 async def get_recent_products():
@@ -221,13 +229,12 @@ async def register_user(user_data: UserRegistration):
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         hashed_password = bcrypt.hash(user_data.password)
-        now = datetime.now()
         cur.execute(
             """
-            INSERT INTO "User" ("Name", "Email", "Password_Hash", "Contact_Info", "datetime")
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO "User" ("Name", "Email", "Password_Hash", "Contact_Info")
+            VALUES (%s, %s, %s, %s)
             """,
-            (user_data.name, user_data.email, hashed_password, user_data.phone_number, now)
+            (user_data.name, user_data.email, hashed_password, user_data.phone_number)
         )
         conn.commit()
         return {"status": "success"}
@@ -238,6 +245,7 @@ async def register_user(user_data: UserRegistration):
         if conn:
             cur.close()
             conn.close()
+
 
 class UserLogin(BaseModel):
     email: str
@@ -460,7 +468,7 @@ async def get_role(data: Emailinput):
     # Get the RoleID from the User table
     cur.execute(
         """
-        SELECT "RoleID" FROM "User" WHERE "Email" = %s
+        SELECT "UserID" FROM "User" WHERE "Email" = %s
         """,
         (data.email,)
     )
